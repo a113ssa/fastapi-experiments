@@ -1,5 +1,9 @@
 import torch
 from transformers import Pipeline, pipeline
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 prompt = "How to create Text Quest game?"
 system_prompt = """
@@ -12,7 +16,7 @@ Your name is Text Quest bot and you are a helpful chatbot
 def load_text_model():
     pipe = pipeline(
         "text-generation",
-        model="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+        model=os.getenv("TEXT_MODEL", "TinyLlama/TinyLlama-1.1B-Chat-v1.0"),
         torch_dtype=torch.bfloat16,
         device=0 if torch.cuda.is_available() else -1,
     )
