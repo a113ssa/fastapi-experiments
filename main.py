@@ -1,5 +1,10 @@
-from fastapi import FastAPI, Query
-from models.text import load_text_model, generate_text
+from fastapi import FastAPI, Query, status
+from fastapi.responses import StreamingResponse
+
+from models.audio import generate_audio, load_audio_model
+from models.text import generate_text, load_text_model
+from schemas import VoicePresets
+from utils import audio_array_to_buffer
 
 app = FastAPI()
 
@@ -9,3 +14,19 @@ def serve_language_model_controller(prompt=Query(...)):
     pipe = load_text_model()
     output = generate_text(pipe, prompt)
     return output
+
+
+@app.get(
+    "/generate/audio",
+    responses={status.HTTP_200_OK: {"content": {"audio/wav": {}}}},
+    response_class=StreamingResponse,
+)
+def serve_text_to_audio_model_controller(
+    prompt=Query(...),
+    preset: VoicePresets = Query(default="v2/en_speaker_1"),
+):
+    processor, model = load_audio_model()
+    output, sample_rate = generate_audio(processor, model, prompt, preset)
+    return StreamingResponse(
+        audio_array_to_buffer(output, sample_rate), media_type="audio/wav"
+    )
